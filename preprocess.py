@@ -1,7 +1,7 @@
 import pandas as pd
 
 X = pd.read_csv(r'Data/Train/PPD_Training_Master_GBK_3_1_Training_Set.csv', encoding='gbk')
-type_desc = pd.read_csv(r'Data\column_descrip.csv')
+# type_desc = pd.read_csv(r'Data\column_descrip.csv')
 print 'data loaded, transforming...'
 y = X['target']
 X.drop('target', axis=1, inplace=True)
