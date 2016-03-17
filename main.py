@@ -22,6 +22,7 @@ if __name__ == '__main__':
     print clf_name + '======================='
     # from sklearn import svm
     # wclf = svm.SVC(kernel='linear', class_weight={1: 10}) # svm don't provide proba
+    sample_weighted = True
     if clf_name =='Ada':
         from sklearn.ensemble import AdaBoostClassifier
         clf = AdaBoostClassifier(n_estimators=100)
@@ -41,7 +42,8 @@ if __name__ == '__main__':
 
     elif clf_name == 'LR':
         from sklearn.linear_model import LogisticRegression
-        clf = LogisticRegression(n_jobs=15)
+        clf = LogisticRegression(n_jobs=-1, class_weight='balanced', penalty='l1')
+        sample_weighted = False
 
     from train_predict import test
-    test(X, y, w, clf)
+    test(X, y, w, clf, sample_weighted)

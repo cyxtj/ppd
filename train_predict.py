@@ -3,8 +3,9 @@ from scipy import interp
 from matplotlib import pyplot as plt
 from sklearn.cross_validation import cross_val_score, StratifiedKFold
 from sklearn.metrics import roc_curve, auc
+from sklearn import preprocessing
 
-def test(X, y, w, clf):
+def test(X, y, w, clf, sample_weighted=True):
     mean_tpr = 0.0
     mean_fpr = np.linspace(0, 1, 100)
     all_tpr = []
@@ -15,7 +16,14 @@ def test(X, y, w, clf):
         X_train, X_test = X[train_index], X[test_index]
         y_train, y_test = y[train_index], y[test_index]
         w_train, w_test = w[train_index], w[test_index]
-        clf.fit(X_train, y_train, w_train)
+        scaler = preprocessing.StandardScaler().fit(X_train)
+        X_train = scaler.transform(X_train)
+        X_test = scaler.transform(X_test)
+
+        if sample_weighted:
+            clf.fit(X_train, y_train, w_train)
+        else:
+            clf.fit(X_train, y_train)
         probas_ = clf.predict_proba(X_test)
         fpr, tpr, thresholds = roc_curve(y_test, probas_[:, 1])
         mean_tpr += interp(mean_fpr, fpr, tpr)
