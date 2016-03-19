@@ -24,10 +24,11 @@ X_train = X[:X1.shape[0], :]
 X_test = X[X1.shape[0]:, :]
 print 'transform finished, training...'
 
+
+''' 3.19 commented
 scaler = preprocessing.StandardScaler().fit(X_train)
 X_train = scaler.transform(X_train)
 X_test = scaler.transform(X_test)
-
 # train and predict
 from sklearn.linear_model import LogisticRegression
 clf = LogisticRegression(n_jobs=-1, class_weight='balanced', penalty='l1')
@@ -53,6 +54,19 @@ plt.show()
 
 # save result
 X2['score'] = probas_[:, 1]
+result = X2[['Idx', 'score']]
+result['Idx'].astype(int)
+result.to_csv('result.csv', float_format='%.4f')
+'''
+
+# 3.19 submit
+import xgboost as xgb
+dtrain = xgb.DMatrix(X_train, label=y_train, weight=w_train)
+dtest = xgb.DMatrix(X_test)
+param = {'silent': 1, 'max_depth':1, 'eta':0.2}
+bst = xgb.train(param, dtrain, num_boost_round=200)
+p = bst.predict(dtest)
+X2['score'] = p
 result = X2[['Idx', 'score']]
 result['Idx'].astype(int)
 result.to_csv('result.csv', float_format='%.4f')

@@ -40,7 +40,7 @@ for i, (train_index, test_index) in enumerate(skf):
     test_auc = []
 
     nrs = np.arange(1, 20) * 20
-    param = {'silent': 1, 'max_depth':2, 'eval_metric':'auc', 'eta':0.3} # 
+    param = {'silent': 1, 'max_depth':1, 'eval_metric':'auc', 'eta':0.2} # 
     eval_list = [(dtrain, 'train'), (dtest, 'eval')]
     result = {}
     '''
