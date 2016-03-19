@@ -49,3 +49,44 @@ def test(X, y, w, clf, sample_weighted=True):
     plt.figtext(0, .5, str(clf))
     plt.show()
 
+def test_xgb(X, y, w):
+    skf = StratifiedKFold(y, n_folds=8, shuffle=True)
+    mean_tpr = 0.0
+    mean_fpr = np.linspace(0, 1, 100)
+    all_tpr = []
+    for i, (train_index, test_index) in enumerate(skf):
+        print i, 
+        X_train, X_test = X[train_index], X[test_index]
+        y_train, y_test = y[train_index], y[test_index]
+        w_train, w_test = w[train_index], w[test_index]
+        dtrain = xgb.DMatrix(X_train, label=y_train, weight=w_train)
+        param = {'silent': 1, 'max_depth':2, 'eta'=0.2}
+        bst = xgb.train(param, dtrain, num_boost_round=60)
+        dtest = xgb.DMatrix(X_test)
+        p = bst.predict(dtest)
+        fpr, tpr, thresholds = roc_curve(y_test, p)
+        mean_tpr += interp(mean_fpr, fpr, tpr)
+        mean_tpr[0] = 0.0
+        roc_auc = auc(fpr, tpr)
+        plt.plot(fpr, tpr, lw=1, label='ROC fold %d (area = %0.3f)' % (i, roc_auc))
+        print 'test auc: %0.3f'%roc_auc, 
+        p2 = bst.predict(dtrain)
+        fpr, tpr, thresholds = roc_curve(y_train, p2)
+        roc_auc = auc(fpr, tpr)
+        print 'train auc: %0.3f'%roc_auc
+
+    plt.plot([0, 1], [0, 1], '--', color=(0.6, 0.6, 0.6), label='Luck')
+
+    mean_tpr /= skf.n_folds
+    mean_tpr[-1] = 1.0
+    mean_auc = auc(mean_fpr, mean_tpr)
+    plt.plot(mean_fpr, mean_tpr, 'k--',
+             label='Mean ROC (area = %0.3f)' % mean_auc, lw=2)
+
+    plt.xlim([-0.05, 1.05])
+    plt.ylim([-0.05, 1.05])
+    plt.xlabel('False Positive Rate')
+    plt.ylabel('True Positive Rate')
+    plt.legend(loc="lower right")
+    plt.show()
+

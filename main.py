@@ -1,18 +1,13 @@
 # coding=utf8
 import numpy as np
 import pandas as pd
-from scipy import interp
-import matplotlib
-# matplotlib.use('Agg')
-from matplotlib import pyplot as plt
-from sklearn import tree
 
 import h5py 
 # fr = h5py.File(r'Data\Train\X.h5', 'r')
 fr = h5py.File(r'Data/Train/X.h5', 'r')
 X = fr['X'].value
 y = fr['y'].value.astype(bool)
-w = fr['w'].value + 1
+w = fr['w'].value
 
 
 
@@ -22,6 +17,11 @@ if __name__ == '__main__':
     print clf_name + '======================='
     # from sklearn import svm
     # wclf = svm.SVC(kernel='linear', class_weight={1: 10}) # svm don't provide proba
+
+    if ckf_name == 'XGB':
+        from train_predict import test_xgb
+        test_xgb(X, y, w)
+
     sample_weighted = True
     if clf_name =='Ada':
         from sklearn.ensemble import AdaBoostClassifier
@@ -38,7 +38,7 @@ if __name__ == '__main__':
 
     elif clf_name == 'RF':
         from sklearn.ensemble import RandomForestClassifier
-        clf = RandomForestClassifier(n_jobs=15, n_estimators=1000)
+        clf = RandomForestClassifier(n_jobs=-1, n_estimators=1000)
 
     elif clf_name == 'LR':
         from sklearn.linear_model import LogisticRegression
