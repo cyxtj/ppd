@@ -55,6 +55,7 @@ fw.create_dataset('y', data=y)
 fw.create_dataset('w', data=w)
 fw.close()
 
+## test data
 fr = h5py.File(r'Data/Test/X-Text.h5', 'r')
 X = fr['X'].value
 print 'Text features loaded'

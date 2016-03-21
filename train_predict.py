@@ -62,10 +62,10 @@ def test_xgb(X, y, w):
         w_train, w_test = w[train_index], w[test_index]
         dtrain = xgb.DMatrix(X_train, label=y_train, weight=w_train)
         dtest = xgb.DMatrix(X_test, label=y_test)
-        param = {'silent': 1, 'max_depth':2, 'eta':0.1, 'eval_metric':'auc'}
+        param = {'silent': 1, 'max_depth':1, 'eta':0.2, 'eval_metric':'auc'}
         result = {}
         eval_list = [(dtrain, 'train'), (dtest, 'eval')]
-        bst = xgb.train(param, dtrain, num_boost_round=200, evals=eval_list,
+        bst = xgb.train(param, dtrain, num_boost_round=300, evals=eval_list,
                 evals_result=result, verbose_eval=100,
                 learning_rates=None)
 
