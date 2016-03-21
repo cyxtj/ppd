@@ -7,23 +7,18 @@ from sklearn import preprocessing
 from sklearn.metrics import roc_curve, auc
 
 # load data
-X1 = pd.read_csv(r'Data/Train/PPD_Training_Master_GBK_3_1_Training_Set.csv', encoding='gbk')
+# X1 = pd.read_csv(r'Data/Train/PPD_Training_Master_GBK_3_1_Training_Set.csv', encoding='gbk')
 X2 = pd.read_csv(r'Data/Test/PPD_Master_GBK_2_Test_Set.csv')# , encoding='gbk')
+import h5py
+
+fr = h5py.File(r'Data/Train/X-Text-Update-PeriodDiff.h5', 'r')
+X_train = fr['X'].value
+y_train = fr['y'].value.astype(bool)
+w_train = fr['w'].value
+print 'X.shape = ', X_train.shape
+fr = h5py.File(r'Data/Test/X-Text-Update-PeriodDiff.h5', 'r')
+X_test = fr['X'].value
 print 'data loaded, transforming...'
-
-# data transform
-y_train = X1['target']
-X1.drop('target', axis=1, inplace=True)
-X = pd.concat([X1, X2])
-import util
-util.numericalization(X)
-util.add_missing_column_imputation(X)
-X = util.categorical_binarization(X)
-w_train = y_train * 20 + 1
-X_train = X[:X1.shape[0], :]
-X_test = X[X1.shape[0]:, :]
-print 'transform finished, training...'
-
 
 ''' 3.19 commented
 scaler = preprocessing.StandardScaler().fit(X_train)
@@ -60,11 +55,12 @@ result.to_csv('result.csv', float_format='%.4f')
 '''
 
 # 3.19 submit
+# 3.20 submit change data with Text-Update-PeriodDiff
 import xgboost as xgb
 dtrain = xgb.DMatrix(X_train, label=y_train, weight=w_train)
 dtest = xgb.DMatrix(X_test)
 param = {'silent': 1, 'max_depth':1, 'eta':0.2}
-bst = xgb.train(param, dtrain, num_boost_round=200)
+bst = xgb.train(param, dtrain, num_boost_round=300)
 p = bst.predict(dtest)
 X2['score'] = p
 result = X2[['Idx', 'score']]

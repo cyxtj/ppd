@@ -50,6 +50,7 @@ def test(X, y, w, clf, sample_weighted=True):
     plt.show()
 
 def test_xgb(X, y, w):
+    import xgboost as xgb
     skf = StratifiedKFold(y, n_folds=8, shuffle=True)
     mean_tpr = 0.0
     mean_fpr = np.linspace(0, 1, 100)
@@ -60,21 +61,34 @@ def test_xgb(X, y, w):
         y_train, y_test = y[train_index], y[test_index]
         w_train, w_test = w[train_index], w[test_index]
         dtrain = xgb.DMatrix(X_train, label=y_train, weight=w_train)
-        param = {'silent': 1, 'max_depth':2, 'eta'=0.2}
-        bst = xgb.train(param, dtrain, num_boost_round=60)
-        dtest = xgb.DMatrix(X_test)
+        dtest = xgb.DMatrix(X_test, label=y_test)
+        param = {'silent': 1, 'max_depth':2, 'eta':0.1, 'eval_metric':'auc'}
+        result = {}
+        eval_list = [(dtrain, 'train'), (dtest, 'eval')]
+        bst = xgb.train(param, dtrain, num_boost_round=200, evals=eval_list,
+                evals_result=result, verbose_eval=100,
+                learning_rates=None)
+
         p = bst.predict(dtest)
         fpr, tpr, thresholds = roc_curve(y_test, p)
         mean_tpr += interp(mean_fpr, fpr, tpr)
         mean_tpr[0] = 0.0
         roc_auc = auc(fpr, tpr)
+        plt.subplot(1, 2, 1)
         plt.plot(fpr, tpr, lw=1, label='ROC fold %d (area = %0.3f)' % (i, roc_auc))
         print 'test auc: %0.3f'%roc_auc, 
         p2 = bst.predict(dtrain)
         fpr, tpr, thresholds = roc_curve(y_train, p2)
         roc_auc = auc(fpr, tpr)
         print 'train auc: %0.3f'%roc_auc
+        plt.plot(fpr, tpr, '--', lw=1)
+        # test auc vs train auc at each round
+        plt.subplot(1, 2, 2)
+        plt.plot(result['train']['auc'], '--', lw=1, color=(0.6, 0.6, 0.6))
+        plt.plot(result['eval']['auc'], '-', lw=1, color=(0.0, 0.0, 0.6),
+                label='%d'%i)
 
+    plt.subplot(1, 2, 1)
     plt.plot([0, 1], [0, 1], '--', color=(0.6, 0.6, 0.6), label='Luck')
 
     mean_tpr /= skf.n_folds
@@ -88,5 +102,9 @@ def test_xgb(X, y, w):
     plt.xlabel('False Positive Rate')
     plt.ylabel('True Positive Rate')
     plt.legend(loc="lower right")
-    plt.show()
 
+    plt.subplot(1, 2, 2)
+    plt.legend(loc="lower right")
+    plt.grid()
+
+    plt.show()
