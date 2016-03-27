@@ -45,7 +45,7 @@ def categorical_binarization(X):
         if '_miss' in column_name: continue     # this column is binary
         distinct_values = X[column_name].unique()
         nd = distinct_values.shape[0]
-        if nd < 6 and nd > 2: # only two value don't need binarize
+        if nd < 10 and nd > 2: # only two value don't need binarize
             print nd
             to_binarize[i] = 1
     enc = preprocessing.OneHotEncoder(categorical_features=to_binarize.astype(bool), sparse=False)

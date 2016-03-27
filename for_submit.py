@@ -15,9 +15,10 @@ fr = h5py.File(r'Data/Train/X-Text-Update-PeriodDiff.h5', 'r')
 X_train = fr['X'].value
 y_train = fr['y'].value.astype(bool)
 w_train = fr['w'].value
-print 'X.shape = ', X_train.shape
+print 'X-train.shape = ', X_train.shape
 fr = h5py.File(r'Data/Test/X-Text-Update-PeriodDiff.h5', 'r')
 X_test = fr['X'].value
+print 'X-test.shape = ', X_test.shape
 print 'data loaded, transforming...'
 
 ''' 3.19 commented
@@ -59,8 +60,8 @@ result.to_csv('result.csv', float_format='%.4f')
 import xgboost as xgb
 dtrain = xgb.DMatrix(X_train, label=y_train, weight=w_train)
 dtest = xgb.DMatrix(X_test)
-param = {'silent': 1, 'max_depth':1, 'eta':0.2}
-bst = xgb.train(param, dtrain, num_boost_round=300)
+param = {'silent': 1, 'max_depth':1, 'eta':0.1, 'subsample':0.5}
+bst = xgb.train(param, dtrain, num_boost_round=400)
 p = bst.predict(dtest)
 X2['score'] = p
 result = X2[['Idx', 'score']]

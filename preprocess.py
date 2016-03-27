@@ -1,21 +1,13 @@
 import numpy as np
 import pandas as pd
+
 '''
 filename = r'PPD_Training_Master_GBK_3_1_Training_Set'
-filename = 'NewMaster'
+# filename = 'NewMaster'
 X = pd.read_csv(r'Data/Train/%s.csv'%filename, encoding='gbk')
-# type_desc = pd.read_csv(r'Data\column_descrip.csv')
 print 'data loaded, transforming...'
 y = X['target']
 X.drop('target', axis=1, inplace=True)
-# is_categorical = type_desc['type']=='Categorical'
-# X_categorical_columns = type_desc[is_categorical]['name']
-# X_numerical_columns = type_desc[is_categorical]['name']
-# X_cate = X[X_categorical_columns].copy()
-# X_num = X[X_numerical_columns].copy()
-# # For categorical data:
-# X_cate.applymap(np.isreal).all(1)
-# X_num.applymap(np.isreal).all(1)
 
 import util
 util.numericalization(X)
@@ -32,22 +24,26 @@ fw.create_dataset('w', data=weight)
 fw.close()
 '''
 
+## merge many features together
+# requires X-Text, deal with text information
+import feature_bind_fixed
+
 import h5py 
 fr = h5py.File(r'Data/Train/X-Text.h5', 'r')
 X = fr['X'].value
 y = fr['y'].value.astype(bool)
 w = fr['w'].value
-print 'Text features loaded'
-print 'X.shape = ', X.shape
-
-# update
 updateInfo = pd.read_csv(r'Data/Train/Update.csv').values
-# period diff
 periodDiff = pd.read_csv(r'Data/Train/PeriodDiff.csv').values
-print 'update and periodDiff loaded'
+updateSum = pd.read_csv(r'Data/Train/update_summary.csv').values
+print 'X-Text.shape = ', X.shape
+print 'updateInfo.shape: ', updateInfo.shape
+print 'periodDiff.shape: ', periodDiff.shape
+print 'updateSum.shape: ', updateSum.shape
 
 # join
-X = np.hstack([X, updateInfo, periodDiff])
+X = np.hstack([X, updateInfo, periodDiff, updateSum])
+print 'X-train.shape: ', X.shape
 
 fw = h5py.File(r'Data/Train/X-Text-Update-PeriodDiff.h5', 'w')
 fw.create_dataset('X', data=X)
@@ -55,20 +51,21 @@ fw.create_dataset('y', data=y)
 fw.create_dataset('w', data=w)
 fw.close()
 
-## test data
+print '================================='
+
 fr = h5py.File(r'Data/Test/X-Text.h5', 'r')
 X = fr['X'].value
-print 'Text features loaded'
-print 'X.shape = ', X.shape
-
-# update
 updateInfo = pd.read_csv(r'Data/Test/Update.csv').values
-# period diff
 periodDiff = pd.read_csv(r'Data/Test/PeriodDiff.csv').values
-print 'update and periodDiff loaded'
+updateSum = pd.read_csv(r'Data/Test/update_summary.csv').values
+print 'X-Text.shape = ', X.shape
+print 'updateInfo.shape: ', updateInfo.shape
+print 'periodDiff.shape: ', periodDiff.shape
+print 'updateSum.shape: ', updateSum.shape
 
 # join
-X = np.hstack([X, updateInfo, periodDiff])
+X = np.hstack([X, updateInfo, periodDiff, updateSum])
+print 'X-test.shape: ', X.shape
 
 import h5py
 fw = h5py.File(r'Data/Test/X-Text-Update-PeriodDiff.h5', 'w')

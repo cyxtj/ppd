@@ -51,6 +51,7 @@ def test(X, y, w, clf, sample_weighted=True):
 
 def test_xgb(X, y, w):
     import xgboost as xgb
+    plt.ion()
     skf = StratifiedKFold(y, n_folds=8, shuffle=True)
     mean_tpr = 0.0
     mean_fpr = np.linspace(0, 1, 100)
@@ -62,10 +63,15 @@ def test_xgb(X, y, w):
         w_train, w_test = w[train_index], w[test_index]
         dtrain = xgb.DMatrix(X_train, label=y_train, weight=w_train)
         dtest = xgb.DMatrix(X_test, label=y_test)
-        param = {'silent': 1, 'max_depth':1, 'eta':0.2, 'eval_metric':'auc'}
+        param = {'silent': 1,  'eval_metric':'auc',#  'nthread':30,
+                'max_depth':1, 'eta':0.1, 'nround': 600, 
+                'subsample': 0.5
+                # 'subsample':1, 'colsample_bytree':1, 
+                #'min_child_weight': 5
+                }
         result = {}
         eval_list = [(dtrain, 'train'), (dtest, 'eval')]
-        bst = xgb.train(param, dtrain, num_boost_round=300, evals=eval_list,
+        bst = xgb.train(param, dtrain, num_boost_round=param['nround'], evals=eval_list,
                 evals_result=result, verbose_eval=100,
                 learning_rates=None)
 
@@ -87,6 +93,7 @@ def test_xgb(X, y, w):
         plt.plot(result['train']['auc'], '--', lw=1, color=(0.6, 0.6, 0.6))
         plt.plot(result['eval']['auc'], '-', lw=1, color=(0.0, 0.0, 0.6),
                 label='%d'%i)
+        plt.draw()
 
     plt.subplot(1, 2, 1)
     plt.plot([0, 1], [0, 1], '--', color=(0.6, 0.6, 0.6), label='Luck')
@@ -102,9 +109,10 @@ def test_xgb(X, y, w):
     plt.xlabel('False Positive Rate')
     plt.ylabel('True Positive Rate')
     plt.legend(loc="lower right")
+    plt.title(str(param))
 
     plt.subplot(1, 2, 2)
     plt.legend(loc="lower right")
     plt.grid()
 
-    plt.show()
+    plt.draw()
