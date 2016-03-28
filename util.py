@@ -1,6 +1,7 @@
 #coding=utf8
 import numpy as np
 import pandas as pd
+import h5py
 
 from sklearn import preprocessing
 
@@ -40,18 +41,35 @@ def categorical_binarization(X):
     binarize these categorical columns
     '''
     # find categorical columns
-    to_binarize = np.zeros(X.shape[1])
+    binarize_columns = []
+    enc = preprocessing.OneHotEncoder(sparse=False)
+    new_features = []
     for i, column_name in enumerate(X):
         if '_miss' in column_name: continue     # this column is binary
         distinct_values = X[column_name].unique()
         nd = distinct_values.shape[0]
-        if nd < 10 and nd > 2: # only two value don't need binarize
-            print nd
-            to_binarize[i] = 1
-    enc = preprocessing.OneHotEncoder(categorical_features=to_binarize.astype(bool), sparse=False)
-    Z = enc.fit_transform(X)
-    return Z
+        if nd < 6 and nd > 2: # only two value don't need binarize
+            print '%s has %i distinct values'%(column_name, nd)
+            Z = enc.fit_transform(X[column_name].values.reshape(-1, 1))
+            new_feature_names = [column_name+'_v'+str(i) for i in range(nd)]
+            newdf = pd.DataFrame(Z, columns=new_feature_names)
+            new_features.append(newdf)
+    X.drop(binarize_columns, axis=1, inplace=True)
+    new_features.append(X)
+    return pd.concat(new_features, axis=1)
 
-def equal_minus1(x):
-    return x==-1
 
+def load_train():
+    fr = h5py.File(r'Data/Train/X-Text-Update-PeriodDiff.h5', 'r')
+    X = fr['X'].value
+    y = fr['y'].value.astype(bool)
+    w = fr['w'].value
+    print 'X.shape = ', X.shape
+    return X, y, w
+
+
+def load_test():
+    fr = h5py.File(r'Data/Test/X-Text-Update-PeriodDiff.h5', 'r')
+    X = fr['X'].value
+    print 'X.shape = ', X.shape
+    return X
