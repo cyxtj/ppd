@@ -7,10 +7,9 @@ from sklearn import preprocessing
 
 def numericalization(X):
     addr_column_names = ['UserInfo_2', 'UserInfo_4', 'UserInfo_7', 'UserInfo_8', 'UserInfo_19', 'UserInfo_20', 'UserInfo_24']
-    X.drop(addr_column_names, axis=1, inplace=True)
-    X.drop('ListingInfo', axis=1, inplace=True)
     is_num_column = X.applymap(np.isreal).all(0) # Nan is also a np.isreal, type(Nan)=float64 !=np.nan
     text_columns = is_num_column[is_num_column==False].index.values
+    print 'text_columns are :\n', text_columns
     # TODO should numerical these columns
     X.drop(text_columns, axis=1, inplace=True)
     # X2 = X[is_num_column[is_num_column==True].index.values]
@@ -41,6 +40,27 @@ def categorical_binarization(X):
     binarize these categorical columns
     '''
     # find categorical columns
+    to_binarize = np.zeros(X.shape[1])
+    for i, column_name in enumerate(X):
+        if '_miss' in column_name: continue     # this column is binary
+        distinct_values = X[column_name].unique()
+        nd = distinct_values.shape[0]
+        if nd < 6 and nd > 2: # only two value don't need binarize
+            print nd
+            to_binarize[i] = 1
+    enc = preprocessing.OneHotEncoder(categorical_features=to_binarize.astype(bool), sparse=False)
+    Z = enc.fit_transform(X)
+    Z = pd.DataFrame(X)
+    return Z
+
+def new_categorical_binarization(X):
+    '''
+    X only contains numbers, and all entries are filled.
+    Define a column of data is categorical: 
+        if the number of distinct values in that column is less than 6
+    binarize these categorical columns
+    '''
+    # find categorical columns
     binarize_columns = []
     enc = preprocessing.OneHotEncoder(sparse=False)
     new_features = []
@@ -60,16 +80,16 @@ def categorical_binarization(X):
 
 
 def load_train():
-    fr = h5py.File(r'Data/Train/X-Text-Update-PeriodDiff.h5', 'r')
+    fr = h5py.File(r'Data/Train/Xfeatures.h5', 'r')
     X = fr['X'].value
-    y = fr['y'].value.astype(bool)
+    y = fr['y'].value.astype(bool).flatten()
     w = fr['w'].value
     print 'X.shape = ', X.shape
     return X, y, w
 
 
 def load_test():
-    fr = h5py.File(r'Data/Test/X-Text-Update-PeriodDiff.h5', 'r')
+    fr = h5py.File(r'Data/Test/Xfeatures.h5', 'r')
     X = fr['X'].value
     print 'X.shape = ', X.shape
     return X

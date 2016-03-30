@@ -2,17 +2,8 @@
 import numpy as np
 import pandas as pd
 
-import h5py 
-# fr = h5py.File(r'Data\Train\X.h5', 'r')
-# fr = h5py.File(r'Data/Train/X.h5', 'r')
-# fr = h5py.File(r'Data/Train/NewMaster.h5', 'r')
-# fr = h5py.File(r'Data/Train/X-diam-reduc.h5', 'r')
-fr = h5py.File(r'Data/Train/X-Text-Update-PeriodDiff.h5', 'r')
-X = fr['X'].value
-y = fr['y'].value.astype(bool)
-w = fr['w'].value
-print 'X.shape = ', X.shape
-
+from util import load_train
+X, y, w = load_train()
 
 if __name__ == '__main__':
     import sys
@@ -21,6 +12,7 @@ if __name__ == '__main__':
     # from sklearn import svm
     # wclf = svm.SVC(kernel='linear', class_weight={1: 10}) # svm don't provide proba
 
+    clf = None
     sample_weighted = True
     if clf_name == 'XGB':
         from train_predict import test_xgb

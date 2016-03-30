@@ -4,6 +4,7 @@ from matplotlib import pyplot as plt
 from sklearn.cross_validation import cross_val_score, StratifiedKFold
 from sklearn.metrics import roc_curve, auc
 from sklearn import preprocessing
+import xgboost as xgb
 
 def test(X, y, w, clf, sample_weighted=True):
     mean_tpr = 0.0
@@ -50,8 +51,6 @@ def test(X, y, w, clf, sample_weighted=True):
     plt.show()
 
 def test_xgb(X, y, w):
-    import xgboost as xgb
-    plt.ion()
     skf = StratifiedKFold(y, n_folds=8, shuffle=True)
     mean_tpr = 0.0
     mean_fpr = np.linspace(0, 1, 100)
@@ -62,18 +61,24 @@ def test_xgb(X, y, w):
         y_train, y_test = y[train_index], y[test_index]
         w_train, w_test = w[train_index], w[test_index]
         dtrain = xgb.DMatrix(X_train, label=y_train, weight=w_train)
+        # dtrain = xgb.DMatrix(X_train, label=y_train) #, weight=w_train)
         dtest = xgb.DMatrix(X_test, label=y_test)
+
+        # param = {'silent': 1,  'eval_metric':'auc',#  'nthread':30,
+        #         'nround':600, 'early_stopping_rounds':30,
+        #         'colsample_bytree': 0.8615941212305067, 'min_child_weight': 5, 'subsample': 0.5618441782807552, 'eta': 0.08415830935283643, 'max_depth': 2, 'gamma': 0.5258845694703286}
         param = {'silent': 1,  'eval_metric':'auc',#  'nthread':30,
-                'max_depth':1, 'eta':0.1, 'nround': 600, 
-                'subsample': 0.5
-                # 'subsample':1, 'colsample_bytree':1, 
+                'max_depth':1, 'eta':0.03, 'nround': 2000, 
+                'subsample': 0.9, 'colsample_bytree':0.8, 
                 #'min_child_weight': 5
                 }
+
+        
         result = {}
         eval_list = [(dtrain, 'train'), (dtest, 'eval')]
         bst = xgb.train(param, dtrain, num_boost_round=param['nround'], evals=eval_list,
-                evals_result=result, verbose_eval=100,
-                learning_rates=None)
+                evals_result=result, verbose_eval=50,
+                learning_rates=None, early_stopping_rounds=100)
 
         p = bst.predict(dtest)
         fpr, tpr, thresholds = roc_curve(y_test, p)
@@ -116,3 +121,4 @@ def test_xgb(X, y, w):
     plt.grid()
 
     plt.draw()
+    plt.show()

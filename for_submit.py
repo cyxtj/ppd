@@ -9,16 +9,9 @@ from sklearn.metrics import roc_curve, auc
 # load data
 # X1 = pd.read_csv(r'Data/Train/PPD_Training_Master_GBK_3_1_Training_Set.csv', encoding='gbk')
 X2 = pd.read_csv(r'Data/Test/PPD_Master_GBK_2_Test_Set.csv')# , encoding='gbk')
-import h5py
-
-fr = h5py.File(r'Data/Train/X-Text-Update-PeriodDiff.h5', 'r')
-X_train = fr['X'].value
-y_train = fr['y'].value.astype(bool)
-w_train = fr['w'].value
-print 'X-train.shape = ', X_train.shape
-fr = h5py.File(r'Data/Test/X-Text-Update-PeriodDiff.h5', 'r')
-X_test = fr['X'].value
-print 'X-test.shape = ', X_test.shape
+from util import load_train, load_test
+X_train, y_train, w_train = load_train()
+X_test = load_test()
 print 'data loaded, transforming...'
 
 ''' 3.19 commented
@@ -60,8 +53,9 @@ result.to_csv('result.csv', float_format='%.4f')
 import xgboost as xgb
 dtrain = xgb.DMatrix(X_train, label=y_train, weight=w_train)
 dtest = xgb.DMatrix(X_test)
-param = {'silent': 1, 'max_depth':1, 'eta':0.1, 'subsample':0.5}
-bst = xgb.train(param, dtrain, num_boost_round=400)
+param = {'silent': 1, 'max_depth':1, 'eta':0.05, 'subsample':0.8,
+        'colsample_bytree': 0.8}
+bst = xgb.train(param, dtrain, num_boost_round=1000)
 p = bst.predict(dtest)
 X2['score'] = p
 result = X2[['Idx', 'score']]
